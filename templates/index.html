@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>F1 Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+<body>
+    <h1>Результаты гонки Формулы-1</h1>
+
+    <div>
+        <label>Год:
+            <select id="year-select" onchange="updateEvents()">
+                {% for y in years %}
+                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Гонка:
+            <select id="event-select" onchange="loadResults()">
+                {% for e in events %}
+                <option value="{{ e }}" {% if e == current_event %}selected{% endif %}>{{ e }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+
+    <div class="container">
+        <div class="replay-container">
+            <svg id="track" width="500" height="500"></svg>
+        </div>
+        <div class="table-container">
+            <div id="results">
+                {{ table_html|safe }}
+            </div>
+            <div id="position-chart" style="width:100%; height:400px;"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
