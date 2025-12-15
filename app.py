@@ -3,6 +3,7 @@ import fastf1 as f1
 import pandas as pd
 import os
 from utils import get_latest_race, get_team_color, format_time
+from track_utils import get_track_stats
 
 app = Flask(__name__)
 
@@ -19,33 +20,81 @@ def index():
 
     try:
         session = f1.get_session(year, event, 'R')
-        session.load()
+        session.load(laps=True)
     except Exception as e:
         table_html = f'<p>Не удалось загрузить данные для {event} {year}. Попробуйте другую гонку.</p>'
     else:
         results = session.results[['Position', 'FullName', 'DriverNumber', 'TeamName', 'Time']]
+        
+        # Определяем пилота с быстрым кругом
+        from utils import get_fastest_lap_driver
+        fastest_driver = get_fastest_lap_driver(session)
+        
+        # Добавляем колонку с очками
+        from utils import calculate_points
+        points_list = []
+        
+        for idx, row in results.iterrows():
+            position = row['Position']
+            driver_abbr = None
+            
+            try:
+                driver_number = row['DriverNumber']
+                driver_info = session.results[session.results['DriverNumber'] == driver_number]
+                if not driver_info.empty:
+                    driver_abbr = driver_info.iloc[0]['Abbreviation']
+            except:
+                pass
+            
+            has_fastest_lap = False
+            if driver_abbr and fastest_driver and driver_abbr == fastest_driver:
+                has_fastest_lap = True
+            
+            points = calculate_points(position, has_fastest_lap)
+            points_list.append(points)
+        
+        results['Points'] = points_list
+        
         results = results.rename(columns={
             'Position': 'Позиция',
             'FullName': 'Имя',
             'DriverNumber': 'Номер',
             'TeamName': 'Команда',
-            'Time': 'Время'
+            'Time': 'Время',
+            'Points': 'Очки'
         })
-        # Преобразуем Позицию в целые числа
-        results['Позиция'] = results['Позиция'].apply(lambda x: int(x) if pd.notna(x) else 'нет информации')
-        # Форматируем время
-        results['Время'] = results['Время'].apply(format_time)
+        
+        results['Позиция'] = results['Позиция'].apply(
+            lambda x: int(x) if pd.notna(x) else 'нет информации'
+        )
+        
+        formatted_times = []
+        for idx, row in results.iterrows():
+            time_str = format_time(row['Время'])
+            if row['Позиция'] == 1 or time_str == 'нет информации':
+                formatted_times.append(time_str)
+            else:
+                formatted_times.append('+' + time_str)
+        
+        results['Время'] = formatted_times
+        
+        table_html = results[['Позиция', 'Имя', 'Номер', 'Команда', 'Время', 'Очки']].to_html(
+            index=False, 
+            classes='f1-table'
+        )
 
-        table_html = results.to_html(index=False, classes='f1-table')
-
-    # Получаем список гонок для текущего года
     try:
         schedule = f1.get_event_schedule(year)
         events = schedule[schedule['EventName'] != 'Test']['EventName'].tolist()
     except:
         events = [event]
 
-    return render_template('index.html', years=YEARS, current_year=year, current_event=event, events=events, table_html=table_html)
+    return render_template('index.html', 
+                         years=YEARS, 
+                         current_year=year, 
+                         current_event=event, 
+                         events=events, 
+                         table_html=table_html)
 
 @app.route('/events', methods=['GET'])
 def get_events():
@@ -64,63 +113,79 @@ def results():
 
     try:
         session = f1.get_session(year, event, 'R')
-        session.load()
+        session.load(laps=True)  # Загружаем круги для определения быстрого круга
 
         results = session.results[['Position', 'FullName', 'DriverNumber', 'TeamName', 'Time']]
+        
+        # Определяем пилота с быстрым кругом
+        from utils import get_fastest_lap_driver
+        fastest_driver = get_fastest_lap_driver(session)
+        
+        # Добавляем колонку с очками
+        from utils import calculate_points
+        points_list = []
+        
+        for idx, row in results.iterrows():
+            position = row['Position']
+            driver_abbr = None
+            
+            # Получаем аббревиатуру пилота для проверки быстрого круга
+            try:
+                # Ищем аббревиатуру в результатах
+                driver_number = row['DriverNumber']
+                driver_info = session.results[session.results['DriverNumber'] == driver_number]
+                if not driver_info.empty:
+                    driver_abbr = driver_info.iloc[0]['Abbreviation']
+            except:
+                pass
+            
+            # Проверяем, есть ли у этого пилота быстрый круг
+            has_fastest_lap = False
+            if driver_abbr and fastest_driver and driver_abbr == fastest_driver:
+                has_fastest_lap = True
+            
+            # Рассчитываем очки
+            points = calculate_points(position, has_fastest_lap)
+            points_list.append(points)
+        
+        results['Points'] = points_list
+        
+        # Переименовываем колонки
         results = results.rename(columns={
             'Position': 'Позиция',
             'FullName': 'Имя',
             'DriverNumber': 'Номер',
             'TeamName': 'Команда',
-            'Time': 'Время'
+            'Time': 'Время',
+            'Points': 'Очки'
         })
-        # Преобразуем Позицию в целые числа
-        results['Позиция'] = results['Позиция'].apply(lambda x: int(x) if pd.notna(x) else 'нет информации')
-        # Форматируем время
-        results['Время'] = results['Время'].apply(format_time)
-
-        table_html = results.to_html(index=False, classes='f1-table')
+        
+        # Форматируем позицию
+        results['Позиция'] = results['Позиция'].apply(
+            lambda x: int(x) if pd.notna(x) else 'нет информации'
+        )
+        
+        # Форматируем время: добавляем "+" ко всем кроме лидера
+        formatted_times = []
+        for idx, row in results.iterrows():
+            time_str = format_time(row['Время'])
+            if row['Позиция'] == 1 or time_str == 'нет информации':
+                formatted_times.append(time_str)
+            else:
+                formatted_times.append('+' + time_str)
+        
+        results['Время'] = formatted_times
+        
+        # Упорядочиваем колонки
+        table_html = results[['Позиция', 'Имя', 'Номер', 'Команда', 'Время', 'Очки']].to_html(
+            index=False, 
+            classes='f1-table'
+        )
 
     except Exception as e:
         table_html = f'<p>Ошибка: {e}</p>'
 
     return table_html
-
-@app.route('/replay', methods=['POST'])
-def replay():
-    year = int(request.form['year'])
-    event = request.form['event']
-
-    try:
-        session = f1.get_session(year, event, 'R')
-        session.load(laps=False, telemetry=False, weather=False, messages=False)
-
-        # Получаем список пилотов
-        drivers = session.results[['DriverNumber', 'FullName', 'TeamName', 'Position']].dropna()
-        drivers = drivers.rename(columns={'FullName': 'Имя', 'TeamName': 'Команда', 'DriverNumber': 'Номер'})
-
-        # Пример: распределяем пилотов по кругу
-        import math
-        driver_list = []
-        n = len(drivers)
-        for i, (idx, row) in enumerate(drivers.iterrows()):
-            angle = (i / n) * 2 * math.pi  # угол на круге
-            team = row['Команда']
-            color = get_team_color(team)
-            # Берём фамилию — если есть пробел, берём последнее слово
-            full_name = row['Имя']
-            surname = full_name.split()[-1] if ' ' in full_name else full_name
-            name = surname[:3]
-            driver_list.append({
-                'name': name,
-                'color': color,
-                'angle': angle
-            })
-
-    except Exception as e:
-        driver_list = []
-
-    return jsonify(driver_list)
 
 @app.route('/positions', methods=['POST'])
 def positions():
@@ -142,10 +207,8 @@ def positions():
             positions = drv_laps['Position'].tolist()
             laps = drv_laps['LapNumber'].tolist()
 
-            # Заменяем NaN на None (который станет null в JSON)
             positions = [int(x) if pd.notna(x) else None for x in positions]
             
-            from utils import get_team_color
             team = session.results[session.results['DriverNumber'] == drv]['TeamName'].iloc[0]
             color = get_team_color(team)
 
@@ -172,6 +235,22 @@ def positions():
         data = []
 
     return jsonify(data)
+ 
+@app.route('/track_stats', methods=['POST'])
+def track_stats():
+    """Возвращает статистику трассы"""
+    year = int(request.form['year'])
+    event = request.form['event']
+    
+    try:
+        from track_utils import get_track_stats
+        stats_data = get_track_stats(year, event)
+        return jsonify(stats_data)
+    except Exception as e:
+        print(f"Ошибка в track_stats: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)})  
 
 if __name__ == '__main__':
     app.run(debug=True)

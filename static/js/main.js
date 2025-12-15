@@ -30,58 +30,21 @@ function loadResults() {
     .then(response => response.text())
     .then(data => {
         document.getElementById('results').innerHTML = data;
-        // Загружаем данные для реплеера
-        loadReplayData(year, event);
-        loadPositionChart(year, event); // <-- вызываем график с позициями
+        loadPositionChart(year, event);
+        
+        // Загружаем статистику трассы
+        if (typeof loadTrackStats === 'function') {
+            loadTrackStats(year, event);
+        } else {
+            console.warn('loadTrackStats не определена');
+            // Показываем заглушку
+            if (typeof displayFallbackStats === 'function') {
+                displayFallbackStats(event);
+            }
+        }
     });
 }
 
-function loadReplayData(year, event) {
-    fetch('/replay', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'year=' + encodeURIComponent(year) + '&event=' + encodeURIComponent(event)
-    })
-    .then(response => response.json())
-    .then(data => {
-        drawTrack(data);
-    });
-}
-
-function drawTrack(data) {
-    const svg = document.getElementById('track');
-    svg.innerHTML = '';
-
-    // Рисуем трассу (круг)
-    const track = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    track.setAttribute("cx", 250);
-    track.setAttribute("cy", 250);
-    track.setAttribute("r", 200);
-    track.setAttribute("stroke", "black");
-    track.setAttribute("fill", "none");
-    svg.appendChild(track);
-
-    // Рисуем пилотов
-    data.forEach(driver => {
-        const x = 250 + 200 * Math.cos(driver.angle);
-        const y = 250 + 200 * Math.sin(driver.angle);
-
-        const car = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        car.setAttribute("cx", x);
-        car.setAttribute("cy", y);
-        car.setAttribute("r", 6);
-        car.setAttribute("fill", driver.color);
-        svg.appendChild(car);
-
-        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        label.setAttribute("x", x + 10);
-        label.setAttribute("y", y);
-        label.textContent = driver.name.substring(0, 3);
-        svg.appendChild(label);
-    });
-}
 
 function loadPositionChart(year, event) {
     fetch('/positions', {
@@ -110,7 +73,7 @@ function plotPositions(data) {
         name: driver.name,
         line: {
             color: driver.color,
-            dash: driver.dash || 'solid'  // стиль линии: solid или dash
+            dash: driver.dash || 'solid'
         },
         type: 'scatter'
     }));
@@ -120,20 +83,19 @@ function plotPositions(data) {
         xaxis: { title: 'Круг' },
         yaxis: {
             title: 'Позиция',
-            range: [20.5, 0.5], // явно задаём диапазон: от 20.5 до 0.5
-            dtick: 1,           // шаг сетки
-            autorange: false    // отключаем авто-диапазон
+            range: [20.5, 0.5],
+            dtick: 1,
+            autorange: false
         },
-        height: 400
+        height: 400,
+        margin: { l: 50, r: 30, t: 40, b: 50 }
     };
 
     Plotly.newPlot('position-chart', traces, layout)
     .catch(error => console.error('Ошибка отрисовки графика:', error));
 }
 
-// Загружаем данные для текущей гонки при запуске
+// Загружаем данные при запуске
 document.addEventListener('DOMContentLoaded', function() {
-    const year = document.getElementById('year-select').value;
-    const event = document.getElementById('event-select').value;
-    loadReplayData(year, event);
+    loadResults();
 });
