@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, jsonify
 import fastf1 as f1
 import pandas as pd
 import os
-from utils import get_latest_race, get_team_color, format_time
+from utils import (get_latest_race, get_team_color, format_time, 
+                   get_fastest_lap_driver, calculate_points, 
+                   get_formatted_time_for_driver)
 from track_utils import get_track_stats
 
 app = Flask(__name__)
@@ -27,11 +29,9 @@ def index():
         results = session.results[['Position', 'FullName', 'DriverNumber', 'TeamName', 'Time']]
         
         # Определяем пилота с быстрым кругом
-        from utils import get_fastest_lap_driver
         fastest_driver = get_fastest_lap_driver(session)
         
         # Добавляем колонку с очками
-        from utils import calculate_points
         points_list = []
         
         for idx, row in results.iterrows():
@@ -68,13 +68,16 @@ def index():
             lambda x: int(x) if pd.notna(x) else 'нет информации'
         )
         
+        # Используем новую функцию для форматирования времени
         formatted_times = []
         for idx, row in results.iterrows():
-            time_str = format_time(row['Время'])
-            if row['Позиция'] == 1 or time_str == 'нет информации':
-                formatted_times.append(time_str)
-            else:
-                formatted_times.append('+' + time_str)
+            position = row['Позиция']
+            time_value = row['Время']
+            driver_number = row['Номер']
+            
+            # Используем новую функцию для форматирования времени
+            formatted_time = get_formatted_time_for_driver(session, position, time_value, driver_number)
+            formatted_times.append(formatted_time)
         
         results['Время'] = formatted_times
         
@@ -118,11 +121,9 @@ def results():
         results = session.results[['Position', 'FullName', 'DriverNumber', 'TeamName', 'Time']]
         
         # Определяем пилота с быстрым кругом
-        from utils import get_fastest_lap_driver
         fastest_driver = get_fastest_lap_driver(session)
         
         # Добавляем колонку с очками
-        from utils import calculate_points
         points_list = []
         
         for idx, row in results.iterrows():
@@ -165,14 +166,16 @@ def results():
             lambda x: int(x) if pd.notna(x) else 'нет информации'
         )
         
-        # Форматируем время: добавляем "+" ко всем кроме лидера
+        # Используем новую функцию для форматирования времени
         formatted_times = []
         for idx, row in results.iterrows():
-            time_str = format_time(row['Время'])
-            if row['Позиция'] == 1 or time_str == 'нет информации':
-                formatted_times.append(time_str)
-            else:
-                formatted_times.append('+' + time_str)
+            position = row['Позиция']
+            time_value = row['Время']
+            driver_number = row['Номер']
+            
+            # Используем новую функцию для форматирования времени
+            formatted_time = get_formatted_time_for_driver(session, position, time_value, driver_number)
+            formatted_times.append(formatted_time)
         
         results['Время'] = formatted_times
         
@@ -243,7 +246,6 @@ def track_stats():
     event = request.form['event']
     
     try:
-        from track_utils import get_track_stats
         stats_data = get_track_stats(year, event)
         return jsonify(stats_data)
     except Exception as e:

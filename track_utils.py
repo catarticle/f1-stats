@@ -42,11 +42,6 @@ def get_track_stats(year, event):
                 'event_name': str(event)
             }
         
-        # Получаем рекорд круга (самый быстрый круг этой гонки)
-        lap_record = get_lap_record(session)
-        
-        # Получаем самого успешного пилота
-        successful_pilot = get_successful_pilot(session, event)
         
         # Получаем длину трассы
         circuit_length = get_circuit_length(session)
@@ -54,17 +49,15 @@ def get_track_stats(year, event):
         # Получаем количество поворотов
         turns_count = estimate_turns_count(session)
         
-        # ВАЖНО: Получаем координаты трассы
+        # Получаем координаты трассы
         coordinates = get_track_coordinates(session)
         
         # Собираем всю статистику
         stats = {
             'track_info': track_info,
-            'lap_record': lap_record,
-            'successful_pilot': successful_pilot,
             'circuit_length': circuit_length,
             'turns_count': turns_count,
-            'coordinates': coordinates,  # ← ДОБАВЛЕНО!
+            'coordinates': coordinates,  
             'year': year
         }
         
@@ -74,7 +67,6 @@ def get_track_stats(year, event):
         print(f"Ошибка в get_track_stats: {e}")
         import traceback
         traceback.print_exc()
-        return get_fallback_stats(event)
 
 def get_track_coordinates(session):
     """Получает координаты трассы из сессии"""
@@ -132,200 +124,6 @@ def get_track_coordinates(session):
         print(f"Ошибка получения координат трассы: {e}")
         return []
 
-def get_lap_record(session):
-    """Получает рекорд круга из сессии"""
-    try:
-        if session.laps is None or session.laps.empty:
-            return {
-                'time': 'Нет данных',
-                'driver': 'Нет данных',
-                'driver_fullname': 'Нет данных',
-                'team': 'Нет данных',
-                'year': 'Нет данных'
-            }
-        
-        # Находим самый быстрый круг
-        fastest_lap = session.laps.pick_fastest()
-        if fastest_lap is None:
-            return {
-                'time': 'Нет данных',
-                'driver': 'Нет данных',
-                'driver_fullname': 'Нет данных',
-                'team': 'Нет данных',
-                'year': 'Нет данных'
-            }
-        
-        # Получаем информацию о пилоте
-        driver_abbr = fastest_lap['Driver']
-        lap_time = fastest_lap['LapTime']
-        
-        # Ищем полное имя и команду в результатах
-        driver_fullname = driver_abbr
-        driver_team = 'Unknown'
-        
-        if hasattr(session, 'results') and session.results is not None:
-            driver_info = session.results[session.results['Abbreviation'] == driver_abbr]
-            if not driver_info.empty:
-                driver_fullname = driver_info.iloc[0]['FullName']
-                driver_team = driver_info.iloc[0]['TeamName']
-        
-        # Форматируем время
-        if pd.notna(lap_time):
-            if hasattr(lap_time, 'total_seconds'):
-                total_seconds = lap_time.total_seconds()
-                minutes = int(total_seconds // 60)
-                seconds = total_seconds % 60
-                formatted_time = f"{minutes}:{seconds:06.3f}"
-            else:
-                # Убираем микросекунды если они есть
-                time_str = str(lap_time)
-                if len(time_str) > 8:
-                    formatted_time = time_str[-12:-4]
-                else:
-                    formatted_time = time_str
-        else:
-            formatted_time = 'Нет данных'
-        
-        return {
-            'time': formatted_time,
-            'driver': str(driver_abbr),
-            'driver_fullname': str(driver_fullname),
-            'team': str(driver_team),
-            'year': str(session.event['EventDate'].year) if hasattr(session.event, 'EventDate') else 'Нет данных'
-        }
-        
-    except Exception as e:
-        print(f"Ошибка получения рекорда круга: {e}")
-        return {
-            'time': 'Нет данных',
-            'driver': 'Нет данных',
-            'driver_fullname': 'Нет данных',
-            'team': 'Нет данных',
-            'year': 'Нет данных'
-        }
-
-
-def get_successful_pilot(session, event_name):
-    """Получает самого успешного пилота на трассе на основе исторических данных"""
-    try:
-        print(f"Анализ исторических данных для трассы: {event_name}")
-        
-        # Получаем исторические данные (последние 20 лет)
-        current_year = datetime.now().year
-        start_year = max(1950, current_year - 20)  # Берем максимум 20 лет истории
-        
-        winners = []
-        
-        # Анализируем результаты прошлых гонок на этой трассе
-        for year in range(start_year, current_year + 1):
-            try:
-                # Получаем расписание за год
-                schedule = f1.get_event_schedule(year)
-                if schedule is None or schedule.empty:
-                    continue
-                
-                # Ищем эту трассу в расписании
-                event_matches = schedule[schedule['EventName'].str.contains(event_name.split('Grand Prix')[0], case=False, na=False)]
-                if event_matches.empty:
-                    # Пробуем найти по ключевым словам
-                    event_keywords = event_name.replace('Grand Prix', '').strip()
-                    event_matches = schedule[schedule['EventName'].str.contains(event_keywords, case=False, na=False)]
-                
-                if not event_matches.empty:
-                    for _, event_row in event_matches.iterrows():
-                        try:
-                            # Пробуем загрузить гонку
-                            race_session = f1.get_session(year, event_row['EventName'], 'R')
-                            race_session.load(results=True, laps=False, telemetry=False)
-                            
-                            if race_session.results is not None and not race_session.results.empty:
-                                # Находим победителя (позиция 1)
-                                winner = race_session.results[race_session.results['Position'] == 1]
-                                if not winner.empty:
-                                    winner_info = winner.iloc[0]
-                                    winners.append({
-                                        'year': year,
-                                        'driver': winner_info['FullName'],
-                                        'driver_abbr': winner_info.get('Abbreviation', ''),
-                                        'team': winner_info['TeamName']
-                                    })
-                                    print(f"  {year}: {winner_info['FullName']} ({winner_info['TeamName']})")
-                        except Exception as e:
-                            # Пропускаем гонки, которые не загружаются
-                            continue
-                            
-            except Exception as e:
-                print(f"Ошибка при анализе года {year}: {e}")
-                continue
-        
-        if winners:
-            # Анализируем, кто побеждал чаще всего
-            driver_wins = Counter()
-            driver_details = {}
-            
-            for win in winners:
-                driver_name = win['driver']
-                driver_wins[driver_name] += 1
-                
-                if driver_name not in driver_details:
-                    driver_details[driver_name] = {
-                        'driver': driver_name,
-                        'driver_abbr': win['driver_abbr'],
-                        'team': win['team'],
-                        'wins': 0,
-                        'years': []
-                    }
-                
-                driver_details[driver_name]['wins'] = driver_wins[driver_name]
-                driver_details[driver_name]['years'].append(str(win['year']))
-            
-            # Находим самого успешного пилота
-            most_wins_driver = driver_wins.most_common(1)[0][0]
-            most_wins_details = driver_details[most_wins_driver]
-            
-            # Форматируем годы побед
-            years_list = most_wins_details['years']
-            if len(years_list) > 3:
-                years_str = f"{years_list[0]}-{years_list[-1]}"
-            else:
-                years_str = ', '.join(years_list)
-            
-            return {
-                'driver': most_wins_driver,
-                'driver_abbr': most_wins_details['driver_abbr'],
-                'team': most_wins_details['team'],
-                'wins': most_wins_details['wins'],
-                'years': years_str
-            }
-        else:
-            # Если исторических данных нет, используем текущего победителя
-            return get_current_winner(session, event_name)
-            
-    except Exception as e:
-        print(f"Ошибка анализа исторических данных: {e}")
-        return get_current_winner(session, event_name)
-
-def get_current_winner(session, event_name):
-    """Получает победителя текущей гонки"""
-    try:
-        if hasattr(session, 'results') and session.results is not None:
-            winner = session.results[session.results['Position'] == 1]
-            if not winner.empty:
-                winner_info = winner.iloc[0]
-                year = session.event['EventDate'].year if hasattr(session.event, 'EventDate') else datetime.now().year
-                
-                return {
-                    'driver': winner_info['FullName'],
-                    'driver_abbr': winner_info.get('Abbreviation', ''),
-                    'team': winner_info['TeamName'],
-                    'wins': 1,
-                    'years': str(year)
-                }
-    except Exception as e:
-        print(f"Ошибка получения текущего победителя: {e}")
-    
-    # Заглушка как последний вариант
-    return 'Нет данных'
 
 def get_circuit_length(session):
     """Получает длину трассы"""
@@ -351,7 +149,22 @@ def get_circuit_length(session):
             'United States Grand Prix': '5.513 км',
             'Australian Grand Prix': '5.278 км',
             'Bahrain Grand Prix': '5.412 км',
-            'Saudi Arabian Grand Prix': '6.174 км'
+            'Saudi Arabian Grand Prix': '6.174 км',
+            'Azerbaijan Grand Prix': '6.003 км',
+            'Miami Grand Prix': '5.412 км',
+            'Spanish Grand Prix': '4.657 км',
+            'Canadian Grand Prix': '4.361 км',
+            'Austrian Grand Prix': '4.318 км',
+            'Hungarian Grand Prix': '4.381 км',
+            'Belgian Grand Prix': '7.004 км',
+            'Dutch Grand Prix': '4.259 км',
+            'Singapore Grand Prix': '4.928 км',
+            'Japanese Grand Prix': '5.807 км',
+            'Qatar Grand Prix': '5.419 км',
+            'Las Vegas Grand Prix': '6.201 км',
+            'Chinese Grand Prix': '5.451 км',
+            'Emilia Romagna Grand Prix': '4.909 км',
+            'Portuguese Grand Prix': '4.653 км'
         }
         
         circuit_name = session.event['EventName'] if hasattr(session.event, 'EventName') else ''
@@ -379,9 +192,24 @@ def estimate_turns_count(session):
             'Brazilian Grand Prix': 15,
             'Mexican Grand Prix': 17,
             'United States Grand Prix': 20,
-            'Australian Grand Prix': 16,
+            'Australian Grand Prix': 14,  # После реконфигурации 2022 года
             'Bahrain Grand Prix': 15,
-            'Saudi Arabian Grand Prix': 27
+            'Saudi Arabian Grand Prix': 27,
+            'Azerbaijan Grand Prix': 20,
+            'Miami Grand Prix': 19,
+            'Spanish Grand Prix': 16,
+            'Canadian Grand Prix': 14,
+            'Austrian Grand Prix': 10,
+            'Hungarian Grand Prix': 14,
+            'Belgian Grand Prix': 19,
+            'Dutch Grand Prix': 14,
+            'Singapore Grand Prix': 19,
+            'Japanese Grand Prix': 18,
+            'Qatar Grand Prix': 16,
+            'Las Vegas Grand Prix': 17,
+            'Chinese Grand Prix': 16,
+            'Emilia Romagna Grand Prix': 19,
+            'Portuguese Grand Prix': 15
         }
         
         circuit_name = session.event['EventName'] if hasattr(session.event, 'EventName') else ''
@@ -394,34 +222,6 @@ def estimate_turns_count(session):
     except:
         return "Нет данных"
 
-def get_fallback_stats(event_name):
-    """Заглушка при ошибке"""
-    return {
-        'track_info': {
-            'name': event_name,
-            'country': 'Нет данных',
-            'location': 'Нет данных',
-            'event_name': event_name
-        },
-        'lap_record': {
-            'time': 'Нет данных',
-            'driver': 'Нет данных',
-            'driver_fullname': 'Нет данных',
-            'team': 'Нет данных',
-            'year': 'Нет данных'
-        },
-        'successful_pilot': {
-            'driver': 'Нет данных',
-            'driver_abbr': 'N/A',
-            'team': 'N/A',
-            'wins': 0,
-            'years': 'N/A'
-        },
-        'circuit_length': 'Нет данных',
-        'turns_count': 'Нет данных',
-        'coordinates': [],  # ← ДОБАВЛЕНО пустой массив координат
-        'year': 'Нет данных'
-    }
 
 def convert_to_serializable(obj):
     """Конвертирует numpy типы в стандартные Python"""

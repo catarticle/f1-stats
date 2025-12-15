@@ -1,5 +1,6 @@
 import fastf1 as f1
 import pandas as pd
+import re
 
 def get_latest_race():
     """Находит самую последнюю гонку, по которой есть реальные результаты"""
@@ -44,14 +45,117 @@ def get_team_color(team):
     return colors.get(team, '#CCCCCC')
 
 def format_time(t):
+    """Форматирует время в читаемый вид"""
     if pd.isna(t):
         return 'нет информации'
+    
+    # Если это строка с указанием кругов
+    if isinstance(t, str):
+        t_str = t.strip()
+        
+        # Проверяем на указание кругов
+        if 'lap' in t_str.lower() or 'laps' in t_str.lower() or 'круг' in t_str.lower():
+            # Извлекаем количество кругов
+            laps_match = re.search(r'\+(\d+)\s*(?:lap|круг|LAP)', t_str, re.IGNORECASE)
+            if laps_match:
+                laps = int(laps_match.group(1))
+                return format_laps_behind(laps)
+        
+        # Если это просто время в формате timedelta
+        if '+' in t_str and 'day' not in t_str:
+            # Убираем возможные дни из timedelta
+            if 'days' in t_str:
+                parts = t_str.split()
+                if len(parts) > 1:
+                    t_str = parts[-1]
+            
+            # Форматируем время
+            if ':' in t_str:
+                time_parts = t_str.split(':')
+                if len(time_parts) >= 3:
+                    # Формат HH:MM:SS.sss
+                    return t_str
+                elif len(time_parts) == 2:
+                    # Формат MM:SS.sss
+                    return f"00:{t_str}"
+    
+    # Если это timedelta
+    if hasattr(t, 'total_seconds'):
+        total_seconds = t.total_seconds()
+        
+        # Форматируем как HH:MM:SS.sss
+        hours = int(total_seconds // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        seconds = total_seconds % 60
+        
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}"
+        elif minutes > 0:
+            return f"{minutes:02d}:{seconds:06.3f}"
+        else:
+            return f"{seconds:06.3f}"
+    
+    # Любой другой случай
     s = str(t)
     if 'days' in s:
         s = s.split(' ')[-1]
     if s.endswith('000'):
         s = s[:-3]
     return s
+
+def check_laps_behind(session, driver_number):
+    """
+    Проверяет, отстал ли пилот на круг.
+    
+    Args:
+        session: сессия FastF1
+        driver_number: номер пилота
+    
+    Returns:
+        Количество кругов отставания или 0
+    """
+    try:
+        if session.laps is None or session.laps.empty:
+            return 0
+        
+        # Получаем круги пилота
+        driver_laps = session.laps[session.laps['DriverNumber'] == driver_number]
+        if driver_laps.empty:
+            return 0
+        
+        # Находим максимальный номер круга среди всех пилотов
+        max_lap = session.laps['LapNumber'].max()
+        
+        # Находим максимальный номер круга у этого пилота
+        driver_max_lap = driver_laps['LapNumber'].max()
+        
+        # Вычисляем отставание в кругах
+        laps_behind = max_lap - driver_max_lap
+        
+        return laps_behind if laps_behind > 0 else 0
+        
+    except Exception as e:
+        print(f"Ошибка при проверке кругов отставания: {e}")
+        return 0
+
+def format_laps_behind(laps):
+    """Форматирует отставание в кругах на русском языке"""
+    if laps <= 0:
+        return ""
+    
+    laps_int = int(laps)
+    
+    # Если отставание больше 2 кругов, показываем DNF
+    if laps_int > 2:
+        return "DNF"
+    
+    # Форматируем для 1-2 кругов
+    if laps_int == 1:
+        return "+1 круг"
+    elif laps_int == 2:
+        return "+2 круга"
+    else:
+        return "DNF" 
 
 def calculate_points(position, fastest_lap=False, sprint=False):
     """Рассчитывает очки по позиции в гонке"""
@@ -132,3 +236,32 @@ def calculate_points_for_session(session):
         }
     
     return points_dict
+
+def get_formatted_time_for_driver(session, position, time_value, driver_number):
+    """
+    Возвращает отформатированное время для драйвера с учетом отставания на круги.
+    
+    Args:
+        session: сессия FastF1
+        position: позиция драйвера
+        time_value: исходное значение времени
+        driver_number: номер драйвера
+    
+    Returns:
+        Отформатированная строка времени
+    """
+    if position == 1:
+        return format_time(time_value)
+    
+    # Проверяем отставание на круги
+    laps_behind = check_laps_behind(session, driver_number)
+    
+    if laps_behind > 0:
+        return format_laps_behind(laps_behind)
+    else:
+        # Форматируем обычное время отставания
+        time_str = format_time(time_value)
+        if time_str != 'нет информации':
+            return '+' + time_str
+        else:
+            return time_str
