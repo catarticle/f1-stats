@@ -2,3 +2,6 @@ flask
 fastf1
 pandas
 plotly
+Flask-SQLAlchemy
+psycopg2-binary
+numpy

@@ -4,3 +4,8 @@ venv/
 env/
 cache/
 .DS_Store
+*.log
+instance/
+*.env
+.env
+migrations/

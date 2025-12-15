@@ -98,7 +98,7 @@ def get_track_coordinates(session):
         # Добавляем отступы
         x_range = x_max - x_min
         y_range = y_max - y_min
-        margin = 0.1  # 10% отступ
+        margin = 0.1 
         
         x_min -= x_range * margin
         x_max += x_range * margin
@@ -107,7 +107,7 @@ def get_track_coordinates(session):
         
         # Создаем массив координат
         coordinates = []
-        step = max(1, len(x) // 300)  # Берем 300 точек для плавности
+        step = max(1, len(x) // 300) 
         
         for i in range(0, len(x), step):
             x_norm = 50 + 400 * (float(x[i]) - x_min) / (x_max - x_min)
@@ -164,7 +164,9 @@ def get_circuit_length(session):
             'Las Vegas Grand Prix': '6.201 км',
             'Chinese Grand Prix': '5.451 км',
             'Emilia Romagna Grand Prix': '4.909 км',
-            'Portuguese Grand Prix': '4.653 км'
+            'Portuguese Grand Prix': '4.653 км',
+            'São Paulo Grand Prix': '4.309 км',
+            'Mexico City Grand Prix': '4.304 км'
         }
         
         circuit_name = session.event['EventName'] if hasattr(session.event, 'EventName') else ''
@@ -209,7 +211,9 @@ def estimate_turns_count(session):
             'Las Vegas Grand Prix': 17,
             'Chinese Grand Prix': 16,
             'Emilia Romagna Grand Prix': 19,
-            'Portuguese Grand Prix': 15
+            'Portuguese Grand Prix': 15,
+            'São Paulo Grand Prix': 15,
+            'Mexico City Grand Prix': 17
         }
         
         circuit_name = session.event['EventName'] if hasattr(session.event, 'EventName') else ''
