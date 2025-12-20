@@ -23,7 +23,6 @@ class RaceResult(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Составной уникальный ключ
     __table_args__ = (
         db.UniqueConstraint('year', 'event', 'driver_name', name='unique_race_result'),
     )
@@ -90,8 +89,8 @@ class PositionData(db.Model):
     year = db.Column(db.Integer, nullable=False, index=True)
     event = db.Column(db.String(200), nullable=False, index=True)
     driver_code = db.Column(db.String(10), nullable=False)
-    positions_json = db.Column(db.Text)  # JSON список позиций
-    laps_json = db.Column(db.Text)       # JSON список кругов
+    positions_json = db.Column(db.Text)  
+    laps_json = db.Column(db.Text)       
     team = db.Column(db.String(100))
     color = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -125,7 +124,7 @@ class CacheStatus(db.Model):
     __tablename__ = 'cache_status'
     
     id = db.Column(db.Integer, primary_key=True)
-    data_type = db.Column(db.String(50), nullable=False)  # 'race_results', 'track_stats', 'positions'
+    data_type = db.Column(db.String(50), nullable=False)  
     year = db.Column(db.Integer, nullable=False)
     event = db.Column(db.String(200), nullable=False)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -134,3 +133,57 @@ class CacheStatus(db.Model):
     __table_args__ = (
         db.UniqueConstraint('data_type', 'year', 'event', name='unique_cache_status'),
     )
+
+class TyreStrategy(db.Model):
+    """Данные стратегии по шинам"""
+    __tablename__ = 'tyre_strategy'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False, index=True)
+    event = db.Column(db.String(200), nullable=False, index=True)
+    driver_code = db.Column(db.String(10), nullable=False)
+    stints_json = db.Column(db.Text)  
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('year', 'event', 'driver_code', name='unique_tyre_strategy'),
+    )
+    
+    @property
+    def stints(self):
+        if self.stints_json:
+            return json.loads(self.stints_json)
+        return []
+    
+    @stints.setter
+    def stints(self, value):
+        self.stints_json = json.dumps(value if value else [])
+        
+class PitstopData(db.Model):
+    """Данные пит-стопов"""
+    __tablename__ = 'pitstop_data'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False, index=True)
+    event = db.Column(db.String(200), nullable=False, index=True)
+    driver_code = db.Column(db.String(10), nullable=False)
+    team = db.Column(db.String(100))
+    lap = db.Column(db.Integer)
+    pitstop_time = db.Column(db.Float)  
+    compound = db.Column(db.String(20))
+    stint = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('year', 'event', 'driver_code', 'lap', name='unique_pitstop'),
+    )
+    
+    def to_dict(self):
+        return {
+            'driver': self.driver_code,
+            'team': self.team,
+            'lap': self.lap,
+            'pitstop_time': self.pitstop_time,
+            'compound': self.compound,
+            'stint': self.stint
+        }

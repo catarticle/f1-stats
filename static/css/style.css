@@ -36,10 +36,38 @@ select {
     min-width: 150px;
 }
 
+/* Основная структура */
 .dashboard {
+    display: grid;
+    grid-template-columns: 550px 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.track-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.track-visualization {
+    background-color: #dfdfdf;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 20px 0;
+}
+
+#track-svg {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Блок с результатами */
+.results-section {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
 }
 
 #results {
@@ -50,13 +78,31 @@ select {
     overflow-x: auto;
 }
 
-#position-chart {
+/* Контейнер для графика позиций */
+.position-chart-container {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    min-height: 450px;
+    display: flex;
+    flex-direction: column;
 }
 
+.position-chart-container h4 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Сам график */
+#position-chart {
+    flex: 1;
+    min-height: 350px;
+    background-color: white;
+}
+
+/* Таблица результатов */
 .f1-table {
     width: 100%;
     border-collapse: collapse;
@@ -83,34 +129,6 @@ select {
 
 .f1-table tr:hover {
     background-color: #f5f5f5;
-}
-
-/* Основная структура */
-.dashboard {
-    display: grid;
-    grid-template-columns: 550px 1fr;
-    gap: 30px;
-    margin-top: 20px;
-}
-
-.track-section {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.track-visualization {
-    background-color: #dfdfdf;
-    border-radius: 8px;
-    padding: 10px;
-    margin: 20px 0;
-}
-
-#track-svg {
-    display: block;
-    margin: 0 auto;
 }
 
 /* Стили для статистики трассы */
@@ -192,99 +210,295 @@ select {
     color: #fff;
 }
 
-.lap-record, .successful-pilot {
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
+/* Раздел стратегии */
+.strategy-section {
+    background-color: white;
+    padding: 20px;
     border-radius: 8px;
-    border-left: 4px solid #e10600;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-top: 30px;
 }
 
-.lap-record h4, .successful-pilot h4 {
-    margin: 0 0 12px 0;
-    color: #fff;
-    font-size: 1.1em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.record-details, .pilot-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.driver-info, .pilot-info {
-    flex: 1;
-    min-width: 200px;
-}
-
-.driver-name, .pilot-name {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #fff;
-    margin-bottom: 4px;
-}
-
-.driver-team, .pilot-team {
-    font-size: 0.9em;
+.strategy-section h3 {
     color: #e10600;
-    font-weight: 500;
-}
-
-.record-time {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #4ECDC4;
-    font-family: 'Courier New', monospace;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #4ECDC4;
-}
-
-.record-year {
-    width: 100%;
-    font-size: 0.8em;
-    color: #aaa;
-    margin-top: 8px;
-    text-align: right;
-}
-
-.pilot-stats {
-    text-align: right;
-}
-
-.wins-count {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #FFD166;
-    margin-bottom: 4px;
-}
-
-.wins-years {
-    font-size: 0.9em;
-    color: #aaa;
-}
-
-.track-year {
     text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e10600;
+    padding-bottom: 10px;
+}
+
+.strategy-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* Контейнеры для графиков стратегии */
+.tyre-strategy-chart,
+.pitstop-analysis-chart {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.tyre-strategy-chart h4,
+.pitstop-analysis-chart h4 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Стили для графика стратегии по шинам */
+.tyre-strategy-container {
+    flex: 1;
+}
+
+.tyre-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    height: 25px;
+}
+
+.tyre-driver {
+    min-width: 40px;
+    font-weight: bold;
+    text-align: right;
+    padding-right: 10px;
+    color: #333;
+}
+
+.tyre-stints {
+    flex: 1;
+    display: flex;
+    height: 100%;
+}
+
+.tyre-stint {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    border-right: 1px solid white;
+    transition: opacity 0.2s;
+}
+
+.tyre-stint:hover {
+    opacity: 0.8;
+}
+
+/* Цвета для составов шин */
+.tyre-soft {
+    background-color: #FF3333;  
+}
+
+.tyre-medium {
+    background-color: #FFD700; 
+}
+
+.tyre-hard {
+    background-color: #FFFFFF;  
+    color: #333 !important;
+    border: 1px solid #333;
+}
+
+.tyre-intermediate {
+    background-color: #33CC33;  
+}
+
+.tyre-wet {
+    background-color: #3366CC;  
+}
+
+.tyre-unknown {
+    background-color: #CCCCCC;  
+}
+
+.tyre-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.tyre-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tyre-legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+}
+
+.tyre-legend-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Стили для анализа пит-стопов */
+.pitstop-analysis-container {
+    flex: 1;
+}
+
+.pitstop-summary {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.summary-item {
+    display: inline-block;
+    margin: 0 20px;
+}
+
+.summary-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e10600;
+}
+
+.team-analysis,
+.driver-analysis {
+    margin-bottom: 25px;
+}
+
+.team-analysis h5,
+.driver-analysis h5 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.team-row,
+.driver-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.team-row:hover,
+.driver-row:hover {
+    background-color: #f9f9f9;
+}
+
+.team-name {
+    font-weight: bold;
+    min-width: 150px;
+    color: #333;
+}
+
+.team-stats {
+    min-width: 120px;
+}
+
+.pitstop-count {
+    font-size: 12px;
+    color: #666;
+    margin-right: 10px;
+}
+
+.avg-time {
+    font-weight: bold;
+    color: #e10600;
+}
+
+.time-bar-container {
+    flex: 1;
+    height: 10px;
+    background-color: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-left: 10px;
+}
+
+.time-bar {
+    height: 100%;
+    background-color: #4CAF50;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+/* Стили для сравнения напарников */
+.teammate-comparison {
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid #444;
-    color: #888;
-    font-size: 0.8em;
+    border-top: 1px solid #eee;
 }
 
-.stats-error {
-    text-align: center;
-    padding: 30px;
-    color: #ff6b6b;
+.teammate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
 }
 
-.stats-error p {
-    margin: 10px 0;
+.teammate-row:last-child {
+    border-bottom: none;
+}
+
+.team-name-small {
+    font-weight: bold;
+    color: #333;
+    min-width: 120px;
+}
+
+.teammate-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.driver-faster {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.time-diff {
+    font-size: 12px;
+    color: #666;
+    background: #f5f5f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .track-section {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .strategy-charts {
+        grid-template-columns: 1fr;
+    }
 }

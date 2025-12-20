@@ -28,29 +28,42 @@
         <!-- Блок с трассой -->
         <div class="track-section">
             <div class="track-container">
-                <!-- SVG трассы (пока не трогаем) -->
                 <div class="track-visualization">
                     <svg id="track-svg" width="500" height="500"></svg>
                 </div>
                 
-                <!-- Статистика трассы -->
                 <div class="track-stats" id="track-stats">
-                    <!-- Здесь будет загружаться статистика -->
                 </div>
             </div>
         </div>
 
-        <!-- Блок с результатами и графиком -->
         <div class="results-section">
             <div id="results">
                 {{ table_html|safe }}
             </div>
-            <div id="position-chart"></div>
+            <div class="position-chart-container"> 
+                <h4>Изменение позиций в гонке</h4>  
+                <div id="position-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="strategy-section">
+    <h3>Анализ стратегии</h3>
+        <div class="strategy-charts">
+            <div class="tyre-strategy-chart">
+                <h4>Стратегия по шинам (гонщики в алфавитном порядке)</h4>
+                <div id="tyre-strategy-chart"></div>
+            </div>
+            <div class="pitstop-analysis-chart">
+                <h4>Анализ пит-стопов</h4>
+                <div id="pitstop-chart"></div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>\
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/track_stats.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/strategy.js') }}"></script>
 </body>
 </html>

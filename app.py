@@ -8,6 +8,7 @@ from utils import (get_latest_race, get_team_color, format_time,
                    get_fastest_lap_driver, calculate_points, 
                    get_formatted_time_for_driver)
 from track_utils import get_track_stats
+from strategy_utils import save_tyre_strategy_to_db, get_tyre_strategy_from_db, extract_tyre_strategy, get_pitstop_data, get_pitstop_data_from_db, save_pitstop_data_to_db
 
 app = Flask(__name__)
 
@@ -322,7 +323,7 @@ def index():
                 classes='f1-table'
             )
             
-            # Сохраняем в БД для будущих запросов
+            # Сохраняем в БД 
             save_race_results_to_db(year, event, session)
             
         except Exception as e:
@@ -560,5 +561,127 @@ def cache_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/tyre_strategy', methods=['POST'])
+def tyre_strategy():
+    """Возвращает данные стратегии по шинам"""
+    year = int(request.form['year'])
+    event = request.form['event']
+    
+    # Пробуем взять из БД
+    if should_use_cache('tyre_strategy', year, event):
+        strategy_data = get_tyre_strategy_from_db(year, event)
+        if strategy_data:
+            print(f"/tyre_strategy: используем кэшированные данные из БД ({event} {year})")
+            return jsonify(strategy_data)
+    
+    # Если нет в кэше, загружаем и кэшируем
+    try:
+        session = f1.get_session(year, event, 'R')
+        session.load(laps=True)
+        
+        strategy_data = extract_tyre_strategy(session)
+        
+        # Сохраняем в БД
+        if strategy_data:
+            save_tyre_strategy_to_db(year, event, strategy_data)
+        
+        return jsonify(strategy_data)
+        
+    except Exception as e:
+        print(f"Ошибка в /tyre_strategy: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)})
+
+@app.route('/pitstop_analysis', methods=['POST'])
+def pitstop_analysis():
+    """Возвращает данные анализа пит-стопов"""
+    year = int(request.form['year'])
+    event = request.form['event']
+    
+    # Пробуем взять из БД
+    if should_use_cache('pitstop_data', year, event):
+        pitstop_data = get_pitstop_data_from_db(year, event)
+        if pitstop_data:
+            print(f"/pitstop_analysis: используем кэшированные данные из БД ({event} {year})")
+            # Анализируем данные из БД
+            return analyze_pitstop_data(pitstop_data)
+    
+    # Если нет в кэше, загружаем и кэшируем
+    try:
+        session = f1.get_session(year, event, 'R')
+        session.load(laps=True)
+        
+        # Получаем данные пит-стопов
+        pitstop_data = get_pitstop_data(session)
+        
+        # Сохраняем в БД
+        if pitstop_data:
+            save_pitstop_data_to_db(year, event, pitstop_data)
+        
+        # Анализируем и возвращаем
+        return analyze_pitstop_data(pitstop_data)
+        
+    except Exception as e:
+        print(f"Ошибка в /pitstop_analysis: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'teams': {}, 'drivers': {}, 'total_pitstops': 0})
+
+def analyze_pitstop_data(pitstop_data):
+    """Анализирует данные пит-стопов"""
+    team_analysis = {}
+    driver_analysis = {}
+    
+    for pitstop in pitstop_data:
+        team = pitstop['team']
+        driver = pitstop['driver']
+        
+        # Анализ по командам
+        if team not in team_analysis:
+            team_analysis[team] = {
+                'total_stops': 0,
+                'total_time': 0,
+                'avg_time': 0,
+                'stops': []
+            }
+        
+        team_analysis[team]['total_stops'] += 1
+        team_analysis[team]['total_time'] += pitstop['pitstop_time']
+        team_analysis[team]['stops'].append({
+            'driver': driver,
+            'time': pitstop['pitstop_time'],
+            'lap': pitstop['lap']
+        })
+        
+        # Анализ по гонщикам
+        if driver not in driver_analysis:
+            driver_analysis[driver] = {
+                'team': team,
+                'total_stops': 0,
+                'stops': []
+            }
+        
+        driver_analysis[driver]['total_stops'] += 1
+        driver_analysis[driver]['stops'].append({
+            'time': pitstop['pitstop_time'],
+            'lap': pitstop['lap'],
+            'compound': pitstop['compound']
+        })
+    
+    # Рассчитываем среднее время для команд
+    for team in team_analysis:
+        if team_analysis[team]['total_stops'] > 0:
+            team_analysis[team]['avg_time'] = (
+                team_analysis[team]['total_time'] / team_analysis[team]['total_stops']
+            )
+    
+    return jsonify({
+        'teams': team_analysis,
+        'drivers': driver_analysis,
+        'total_pitstops': len(pitstop_data)
+    })
+    
+    
 if __name__ == '__main__':
     app.run(debug=True)

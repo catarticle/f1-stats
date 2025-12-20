@@ -238,18 +238,6 @@ def calculate_points_for_session(session):
     return points_dict
 
 def get_formatted_time_for_driver(session, position, time_value, driver_number):
-    """
-    Возвращает отформатированное время для драйвера с учетом отставания на круги.
-    
-    Args:
-        session: сессия FastF1
-        position: позиция драйвера
-        time_value: исходное значение времени
-        driver_number: номер драйвера
-    
-    Returns:
-        Отформатированная строка времени
-    """
     if position == 1:
         return format_time(time_value)
     

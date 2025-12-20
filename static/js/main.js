@@ -37,10 +37,19 @@ function loadResults() {
             loadTrackStats(year, event);
         } else {
             console.warn('loadTrackStats не определена');
-            // Показываем заглушку
             if (typeof displayFallbackStats === 'function') {
                 displayFallbackStats(event);
             }
+        }
+
+        // Загружаем стратегию по шинам
+        if (typeof loadTyreStrategy === 'function') {
+            loadTyreStrategy(year, event);
+        }
+        
+        // Загружаем анализ пит-стопов
+        if (typeof loadPitstopAnalysis === 'function') {
+            loadPitstopAnalysis(year, event);
         }
     });
 }
