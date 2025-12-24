@@ -1,5 +1,6 @@
 function loadTyreStrategy(year, event) {
     console.log('Загрузка стратегии по шинам:', event, year);
+    const loader = showLoading('tyre-strategy-chart', 'normal');
     
     fetch('/tyre_strategy', {
         method: 'POST',
@@ -21,10 +22,12 @@ function loadTyreStrategy(year, event) {
         } else {
             renderTyreStrategyChart(data);
         }
+        hideLoading('tyre-strategy-chart');
     })
     .catch(error => {
         console.error('Ошибка загрузки стратегии:', error);
         displayStrategyError('Не удалось загрузить данные стратегии');
+        hideLoading('tyre-strategy-chart');
     });
 }
 
@@ -50,7 +53,7 @@ function renderTyreStrategyChart(strategyData) {
         maxLaps = Math.max(maxLaps, driverLaps);
     });
     
-    // Пока просто сортируем по имени, потом можно будет по позиции
+    // Пока просто сортируем по имени
     strategyData.sort((a, b) => a.driver.localeCompare(b.driver));
     
     let html = '<div class="tyre-strategy-container">';
@@ -134,6 +137,7 @@ if (typeof window !== 'undefined') {
 
 function loadPitstopAnalysis(year, event) {
     console.log('Загрузка анализа пит-стопов:', event, year);
+    const loader = showLoading('pitstop-chart', 'normal');
     
     fetch('/pitstop_analysis', {
         method: 'POST',
@@ -155,10 +159,12 @@ function loadPitstopAnalysis(year, event) {
         } else {
             renderPitstopAnalysisChart(data);
         }
+        hideLoading('pitstop-chart');
     })
     .catch(error => {
         console.error('Ошибка загрузки анализа пит-стопов:', error);
         displayPitstopChartError('Не удалось загрузить данные пит-стопов');
+        hideLoading('pitstop-chart');
     });
 }
 

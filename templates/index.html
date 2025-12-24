@@ -1,34 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>F1 Dashboard</title>
+    <title>F1 Metrics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Результаты гонки Формулы-1</h1>
+    <div class="racing-header">
+        <div class="flag-stripe flag-red"></div>
+        <div class="flag-stripe flag-white"></div>
+        <div class="racing-logo-container">
+            <img src="{{ url_for('static', filename='images/F1.svg.webp') }}" 
+                alt="Formula 1" 
+                class="f1-logo-racing">
+            <span class="racing-title">RACE METRICS</span>
+        </div>
+        <div class="flag-stripe flag-white"></div>
+        <div class="flag-stripe flag-red"></div>
+    </div>
 
     <div class="controls">
-        <label>Год:
-            <select id="year-select" onchange="updateEvents()">
-                {% for y in years %}
-                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>Гонка:
-            <select id="event-select" onchange="loadResults()">
-                {% for e in events %}
-                <option value="{{ e }}" {% if e == current_event %}selected{% endif %}>{{ e }}</option>
-                {% endfor %}
-            </select>
-        </label>
+        <div class="controls-row">
+            <!-- Логотипы слева -->
+            <div class="logos-row logos-left">
+                <img src="{{ url_for('static', filename='images/teams/alpine.jpg') }}" 
+                    alt="Alpine" title="Alpine" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/aston_martin.svg') }}" 
+                    alt="Aston Martin" title="Aston Martin" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/ferrari.svg') }}" 
+                    alt="Ferrari" title="Ferrari" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/haas.png') }}" 
+                    alt="Haas" title="Haas" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/kick_sauber.png') }}" 
+                    alt="Kick Sauber" title="Kick Sauber" class="team-logo-horizontal">
+            </div>
+            
+            <!-- Селекторы по центру -->
+            <div class="selectors-center">
+                <label>Сезон:
+                    <select id="year-select" onchange="updateEvents()">
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Гран-при:
+                    <select id="event-select" onchange="loadResults()">
+                        {% for e in events %}
+                        <option value="{{ e }}" {% if e == current_event %}selected{% endif %}>{{ e }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            
+            <!-- Логотипы справа -->
+            <div class="logos-row logos-right">
+                <img src="{{ url_for('static', filename='images/teams/mclaren.png') }}" 
+                    alt="McLaren" title="McLaren" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/mercedes.png') }}" 
+                    alt="Mercedes" title="Mercedes" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/racing_bulls.svg') }}" 
+                    alt="Racing Bulls" title="Racing Bulls" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/red_bull.png') }}" 
+                    alt="Red Bull" title="Red Bull" class="team-logo-horizontal">
+                <img src="{{ url_for('static', filename='images/teams/williams.png') }}" 
+                    alt="Williams" title="Williams" class="team-logo-horizontal">
+            </div>
+        </div>
     </div>
 
     <div class="dashboard">
-        <!-- Блок с трассой -->
         <div class="track-section">
             <div class="track-container">
-                <div class="track-visualization">
+                <div class="track-visualization" id="track-visualization">
                     <svg id="track-svg" width="500" height="500"></svg>
                 </div>
                 
@@ -41,10 +84,11 @@
             <div id="results">
                 {{ table_html|safe }}
             </div>
-            <div class="position-chart-container"> 
-                <h4>Изменение позиций в гонке</h4>  
-                <div id="position-chart"></div>
-            </div>
+        </div>
+        
+        <div class="position-chart-container"> 
+            <h4>Изменение позиций в гонке</h4>  
+            <div id="position-chart"></div>
         </div>
     </div>
     <div class="strategy-section">

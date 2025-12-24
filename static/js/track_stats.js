@@ -1,6 +1,8 @@
 function loadTrackStats(year, event) {
     console.log('Загрузка статистики трассы:', event, year);
-    
+    const loaderTrackStats = showLoading('track-stats', 'normal');
+    const loaderTrackVis = showLoading('track-visualization', 'large'); // Большой лоадер для трассы
+
     fetch('/track_stats', {
         method: 'POST',
         headers: {
@@ -17,10 +19,14 @@ function loadTrackStats(year, event) {
     .then(data => {
         console.log('Статистика получена:', data);
         displayTrackStats(data);
+        hideLoading('track-stats');
+        hideLoading('track-visualization');
     })
     .catch(error => {
         console.error('Ошибка загрузки статистики:', error);
         displayFallbackStats(event);
+        hideLoading('track-stats');
+        hideLoading('track-visualization');
     });
 }
 
@@ -28,6 +34,7 @@ function displayTrackStats(statsData) {
     const statsContainer = document.getElementById('track-stats');
     if (!statsContainer) {
         console.error('Контейнер track-stats не найден');
+        hideLoading('track-visualization');
         return;
     }
     
@@ -66,12 +73,15 @@ function displayTrackStats(statsData) {
     
     statsContainer.innerHTML = html;
 
+    // Отрисовываем трассу
     if (statsData.coordinates && statsData.coordinates.length > 0) {
         drawSimpleTrack(statsData);
     } else {
         console.log('Нет координат для отрисовки трассы');
+        drawFallbackTrack();
     }
 }
+
 
 function displayFallbackStats(eventName) {
     const statsContainer = document.getElementById('track-stats');
@@ -96,15 +106,17 @@ function displayFallbackStats(eventName) {
 }
 
 function drawSimpleTrack(trackData) {
+    const container = document.getElementById('track-visualization');
     const svg = document.getElementById('track-svg');
-    if (!svg) {
-        console.error('SVG элемент не найден!');
+    if (!container || !svg) {
+        console.error('Элементы трассы не найдены!');
         return;
     }
     
+    // Очищаем SVG
     svg.innerHTML = '';
     
-    // Просто рисуем линию если есть координаты
+    // Рисуем линию если есть координаты
     if (trackData.coordinates && trackData.coordinates.length > 1) {
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         let d = `M ${trackData.coordinates[0].x} ${trackData.coordinates[0].y}`;

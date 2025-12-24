@@ -255,7 +255,7 @@ def get_pitstop_data(session):
                                         try:
                                             pitstop_time = pit_lap['PitOutTime'] - in_lap['PitInTime']
                                             pitstop_time_seconds = pitstop_time.total_seconds()
-                                            print(f"  Найден реальный пит-стоп: круг {in_lap_num}->{lap_num}, время: {pitstop_time_seconds:.2f}с")
+                                            print(f"  Найден пит-стоп: круг {in_lap_num}->{lap_num}, время: {pitstop_time_seconds:.2f}с")
                                         except:
                                             pass
                         

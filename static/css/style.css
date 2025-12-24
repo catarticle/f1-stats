@@ -5,36 +5,129 @@ body {
     background-color: #f5f5f5;
 }
 
-h1 {
-    color: #e10600;
+.racing-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
+    position: relative;
 }
 
-.controls {
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 20px;
+.flag-stripe {
+    height: 8px;
+    width: 100%;
+}
+
+.flag-red {
+    background-color: #e10600;
+}
+
+.flag-white {
+    background-color: white;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.racing-logo-container {
+    padding: 25px 0;
+    margin: 10px 0;
+    background: linear-gradient(to right, transparent, #f8f8f8, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.f1-logo-racing {
+    height: 50px;
+    width: auto;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+}
+
+.f1-logo-racing:hover {
+    transform: scale(1.05);
+}
+
+.racing-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+/* Стили для горизонтального расположения */
+.controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-label {
+/* Горизонтальные ряды с логотипами */
+.logos-left,
+.logos-right {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.logos-left {
+    justify-content: space-between; 
+    padding-right: 30px;
+}
+
+.logos-right {
+    justify-content: space-between; 
+    padding-left: 30px;
+}
+
+/* Логотипы */
+.team-logo-horizontal {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.team-logo-horizontal:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Селекторы по центру */
+.selectors-center {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-shrink: 0;
+    min-width: 400px;
+    justify-content: center;
+}
+
+.selectors-center label {
     font-weight: bold;
     margin-right: 20px;
     color: #333;
+    white-space: nowrap;
 }
 
-select {
+.selectors-center select {
     padding: 10px 15px;
     border: 2px solid #e10600;
-    border-radius: 6px;
+    border-radius: 10px;
     background-color: white;
     font-size: 14px;
     margin-right: 30px;
     min-width: 150px;
 }
+
+
 
 /* Основная структура */
 .dashboard {
@@ -52,7 +145,7 @@ select {
 }
 
 .track-visualization {
-    background-color: #dfdfdf;
+    background-color: #f5f5f5;
     border-radius: 8px;
     padding: 10px;
     margin: 20px 0;
@@ -84,22 +177,49 @@ select {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    min-height: 450px;
+    min-height: 500px;
     display: flex;
     flex-direction: column;
+    grid-column: 1 / -1; 
+    margin-top: 20px;
 }
 
 .position-chart-container h4 {
-    color: #333;
-    margin-bottom: 15px;
+    color: #e10600;
     text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e10600;
+    padding-bottom: 10px;
+    font-size: 1.5em;
 }
 
-/* Сам график */
+/* График */
 #position-chart {
     flex: 1;
-    min-height: 350px;
+    min-height: 450px;
     background-color: white;
+    width: 100%;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 550px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.results-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.position-chart-container {
+    grid-column: 1 / -1;
+    grid-row: 2;
 }
 
 /* Таблица результатов */
@@ -225,6 +345,7 @@ select {
     margin-bottom: 20px;
     border-bottom: 2px solid #e10600;
     padding-bottom: 10px;
+    font-size: 1.5em;
 }
 
 .strategy-charts {
@@ -487,18 +608,71 @@ select {
     border-radius: 10px;
 }
 
-/* Адаптивность */
-@media (max-width: 1200px) {
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-    
-    .track-section {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    
-    .strategy-charts {
-        grid-template-columns: 1fr;
-    }
+/* Стили для лоадера */
+.loader-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 200px;
 }
+
+.loader-wheel {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #e10600;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loader-wheel.small {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+.loader-wheel.large {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Контейнеры для лоадеров */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: 8px;
+}
+
+.loading-inline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.loading-mini {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* Скрытие лоадера */
+.hidden {
+    display: none !important;
+}
+
