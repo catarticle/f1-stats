@@ -14,11 +14,11 @@ def get_track_stats(year, event):
         try:
             session = f1.get_session(year, event, 'R')
             session.load(telemetry=True, laps=True, weather=False)
-        except:
+        except Exception:
             try:
                 session = f1.get_session(year, event, 'Q')
                 session.load(telemetry=True, laps=True, weather=False)
-            except:
+            except Exception:
                 session = f1.get_session(year, event, 'FP3')
                 session.load(telemetry=True, laps=True, weather=False)
         
@@ -173,10 +173,10 @@ def get_circuit_length(session):
         for key, value in known_lengths.items():
             if key in circuit_name or circuit_name in key:
                 return value
-        
+
         return "Нет данных"
-        
-    except:
+
+    except Exception:
         return "Нет данных"
 
 def estimate_turns_count(session):
@@ -220,10 +220,10 @@ def estimate_turns_count(session):
         for key, value in known_turns.items():
             if key in circuit_name or circuit_name in key:
                 return value
-        
+
         return "Нет данных"
-        
-    except:
+
+    except Exception:
         return "Нет данных"
 
 

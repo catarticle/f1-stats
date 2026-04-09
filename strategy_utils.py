@@ -137,9 +137,9 @@ def extract_tyre_strategy(session):
                     driver_abbr = driver_info["Abbreviation"]
                 else:
                     driver_abbr = driver
-            except:
+            except Exception:
                 driver_abbr = driver
-            
+
             if stints:
                 total_laps = sum(stint['stint_length'] for stint in stints)
                 print(f"DEBUG: Гонщик {driver_abbr}: {len(stints)} стендов, {total_laps} кругов")
@@ -256,9 +256,9 @@ def get_pitstop_data(session):
                                             pitstop_time = pit_lap['PitOutTime'] - in_lap['PitInTime']
                                             pitstop_time_seconds = pitstop_time.total_seconds()
                                             print(f"  Найден пит-стоп: круг {in_lap_num}->{lap_num}, время: {pitstop_time_seconds:.2f}с")
-                                        except:
+                                        except Exception:
                                             pass
-                        
+
                         pitstops_for_driver.append({
                             'lap': pitstop_lap,
                             'from_stint': prev_stint,

@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 db = SQLAlchemy()
@@ -20,8 +20,8 @@ class RaceResult(db.Model):
     fastest_lap = db.Column(db.Boolean, default=False)
     laps_behind = db.Column(db.Integer, default=0)
     status = db.Column(db.String(50), default='Finished')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
     __table_args__ = (
         db.UniqueConstraint('year', 'event', 'driver_name', name='unique_race_result'),
@@ -50,8 +50,8 @@ class TrackStats(db.Model):
     circuit_length = db.Column(db.String(50))
     turns_count = db.Column(db.Integer)
     coordinates_json = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
     __table_args__ = (
         db.UniqueConstraint('year', 'event', name='unique_track_stats'),
@@ -93,7 +93,7 @@ class PositionData(db.Model):
     laps_json = db.Column(db.Text)       
     team = db.Column(db.String(100))
     color = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     __table_args__ = (
         db.UniqueConstraint('year', 'event', 'driver_code', name='unique_position_data'),
@@ -127,7 +127,7 @@ class CacheStatus(db.Model):
     data_type = db.Column(db.String(50), nullable=False)  
     year = db.Column(db.Integer, nullable=False)
     event = db.Column(db.String(200), nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     is_valid = db.Column(db.Boolean, default=True)
     
     __table_args__ = (
@@ -143,7 +143,7 @@ class TyreStrategy(db.Model):
     event = db.Column(db.String(200), nullable=False, index=True)
     driver_code = db.Column(db.String(10), nullable=False)
     stints_json = db.Column(db.Text)  
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     __table_args__ = (
         db.UniqueConstraint('year', 'event', 'driver_code', name='unique_tyre_strategy'),
@@ -172,7 +172,7 @@ class PitstopData(db.Model):
     pitstop_time = db.Column(db.Float)  
     compound = db.Column(db.String(20))
     stint = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     
     __table_args__ = (
         db.UniqueConstraint('year', 'event', 'driver_code', 'lap', name='unique_pitstop'),

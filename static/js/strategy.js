@@ -212,7 +212,7 @@ function renderPitstopAnalysisChart(data) {
                     <span class="avg-time">${avgTime} сек</span>
                 </div>
                 <div class="time-bar-container">
-                    <div class="time-bar" style="width: ${(avgTime / 50) * 100}%"></div>
+                    <div class="time-bar" style="width: ${(avgTime / 60) * 100}%"></div>
                 </div>
             </div>
         `;

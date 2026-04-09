@@ -187,7 +187,7 @@ def get_fastest_lap_driver(session):
             fastest_lap = session.laps.pick_fastest()
             if fastest_lap is not None:
                 return fastest_lap['Driver']
-    except:
+    except Exception:
         pass
     return None
 

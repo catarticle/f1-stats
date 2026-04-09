@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import fastf1 as f1
 import pandas as pd
 import os
-from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 from database import db, RaceResult, TrackStats, PositionData, CacheStatus
 from utils import (get_latest_race, get_team_color, format_time, 
                    get_fastest_lap_driver, calculate_points, 
@@ -13,7 +14,9 @@ from strategy_utils import save_tyre_strategy_to_db, get_tyre_strategy_from_db, 
 app = Flask(__name__)
 
 # НАСТРОЙКИ POSTGRESQL 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:maIam2343PRO@localhost:5432/f1_dashboard'
+load_dotenv()  # Загружает переменные из .env
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Инициализация базы данных
@@ -34,12 +37,19 @@ def should_use_cache(data_type, year, event, expire_days=1):
         event=event,
         is_valid=True
     ).first()
-    
+
     if not cache_status:
         return False
-    
+
     # Проверяем срок годности кэша
-    time_diff = datetime.utcnow() - cache_status.last_updated
+    now = datetime.now(timezone.utc)
+    last_updated = cache_status.last_updated
+    
+    # Если last_updated без timezone, добавляем UTC
+    if last_updated.tzinfo is None:
+        last_updated = last_updated.replace(tzinfo=timezone.utc)
+    
+    time_diff = now - last_updated
     return time_diff < timedelta(days=expire_days)
 
 def update_cache_status(data_type, year, event, is_valid=True):
@@ -51,7 +61,7 @@ def update_cache_status(data_type, year, event, is_valid=True):
     ).first()
     
     if cache_status:
-        cache_status.last_updated = datetime.utcnow()
+        cache_status.last_updated = datetime.now(timezone.utc)
         cache_status.is_valid = is_valid
     else:
         cache_status = CacheStatus(
@@ -235,15 +245,25 @@ def get_position_data_from_db(year, event):
             'team': entry.team,
             'color': entry.color
         })
+        # Восстанавливаем тип линии для каждой команды
+    from collections import defaultdict
+    team_drivers = defaultdict(list)
     
+    for driver in data:
+        team_drivers[driver['team']].append(driver)
+    
+    for team, drivers in team_drivers.items():
+        for i, driver in enumerate(drivers):
+            driver['dash'] = 'solid' if i == 0 else 'dash'
+            
     return data
 
 
-if not os.path.exists('cache'):
-    os.makedirs('cache')
-f1.Cache.enable_cache('cache')
+# if not os.path.exists('cache'):
+#     os.makedirs('cache')
+# f1.Cache.enable_cache('cache')
 
-YEARS = list(range(2018, 2026))
+YEARS = list(range(2018, 2027))
 
 # Маршруты приложений
 
@@ -281,9 +301,9 @@ def index():
                     driver_info = session.results[session.results['DriverNumber'] == driver_number]
                     if not driver_info.empty:
                         driver_abbr = driver_info.iloc[0]['Abbreviation']
-                except:
+                except Exception:
                     pass
-                
+
                 has_fastest_lap = False
                 if driver_abbr and fastest_driver and driver_abbr == fastest_driver:
                     has_fastest_lap = True
@@ -334,7 +354,7 @@ def index():
     try:
         schedule = f1.get_event_schedule(year)
         events = schedule[schedule['EventName'] != 'Test']['EventName'].tolist()
-    except:
+    except Exception:
         events = [event]
 
     return render_template('index.html', 
@@ -350,7 +370,7 @@ def get_events():
     try:
         schedule = f1.get_event_schedule(year)
         events = schedule[schedule['EventName'] != 'Test']['EventName'].tolist()
-    except:
+    except Exception:
         events = []
     return jsonify(events)
 
@@ -386,9 +406,9 @@ def results():
                 driver_info = session.results[session.results['DriverNumber'] == driver_number]
                 if not driver_info.empty:
                     driver_abbr = driver_info.iloc[0]['Abbreviation']
-            except:
+            except Exception:
                 pass
-            
+
             has_fastest_lap = False
             if driver_abbr and fastest_driver and driver_abbr == fastest_driver:
                 has_fastest_lap = True
