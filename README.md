@@ -76,5 +76,7 @@ f1-telemetry/
 **SQLAlchemy:** ORM базы данных
 
 **Pandas:** Манипуляция данными
+
 **Plotly:** Интерактивные графики
+
 **PostgreSQL:** База данных
