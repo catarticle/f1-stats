@@ -91,7 +91,7 @@ def get_track_coordinates(session):
         x = telemetry['X'].values
         y = telemetry['Y'].values
         
-        # Нормализуем координаты для SVG (500x500)
+        # Нормализуем координаты для SVG 
         x_min, x_max = float(x.min()), float(x.max())
         y_min, y_max = float(y.min()), float(y.max())
         

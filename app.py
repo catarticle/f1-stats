@@ -10,6 +10,7 @@ from utils import (get_latest_race, get_team_color, format_time,
                    get_formatted_time_for_driver)
 from track_utils import get_track_stats
 from strategy_utils import save_tyre_strategy_to_db, get_tyre_strategy_from_db, extract_tyre_strategy, get_pitstop_data, get_pitstop_data_from_db, save_pitstop_data_to_db
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -45,7 +46,6 @@ def should_use_cache(data_type, year, event, expire_days=1):
     now = datetime.now(timezone.utc)
     last_updated = cache_status.last_updated
     
-    # Если last_updated без timezone, добавляем UTC
     if last_updated.tzinfo is None:
         last_updated = last_updated.replace(tzinfo=timezone.utc)
     
@@ -150,7 +150,7 @@ def get_race_results_from_db(year, event):
     # Преобразуем в список словарей для таблицы
     results_data = [result.to_dict() for result in results]
     
-    # Создаем HTML таблицу
+    # Создаем таблицу
     if results_data:
         df = pd.DataFrame(results_data)
         return df.to_html(index=False, classes='f1-table')
@@ -245,8 +245,7 @@ def get_position_data_from_db(year, event):
             'team': entry.team,
             'color': entry.color
         })
-        # Восстанавливаем тип линии для каждой команды
-    from collections import defaultdict
+    # Восстанавливаем тип линии для каждой команды    
     team_drivers = defaultdict(list)
     
     for driver in data:

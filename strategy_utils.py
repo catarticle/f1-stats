@@ -128,7 +128,7 @@ def extract_tyre_strategy(session):
                     'end_lap': stint_start_lap + stint_length - 1
                 })
             
-            # Получаем аббревиатуру гонщмка из сессии
+            # Получаем аббревиатуру гонщика из сессии
             try:
                 # Ищем номер гонщика
                 driver_number = driver_laps['DriverNumber'].iloc[0] if 'DriverNumber' in driver_laps.columns else None
@@ -181,7 +181,7 @@ def get_pitstop_data(session):
         print(f"Всего кругов в сессии: {len(laps)}")
         print(f"Уникальные гонщики: {laps['Driver'].unique()}")
         
-        # Способ 1: Ищем круги с PitOutTime (выезд из пит-лейна)
+        # Ищем круги с PitOutTime (выезд из пит-лейна)
         print("\nПоиск пит-стопов по PitOutTime...")
         if 'PitOutTime' in laps.columns:
             pit_out_laps = laps[laps['PitOutTime'].notna()].copy()
@@ -193,7 +193,7 @@ def get_pitstop_data(session):
                 for idx, lap in pit_out_laps.head(5).iterrows():
                     print(f"  Гонщик: {lap['Driver']}, Круг: {lap['LapNumber']}, PitOutTime: {lap['PitOutTime']}")
         
-        # Способ 2: Ищем круги с PitInTime (въезд в пит-лейн)
+        # Ищем круги с PitInTime (въезд в пит-лейн)
         print("\nПоиск пит-стопов по PitInTime...")
         if 'PitInTime' in laps.columns:
             pit_in_laps = laps[laps['PitInTime'].notna()].copy()
@@ -204,7 +204,7 @@ def get_pitstop_data(session):
                 for idx, lap in pit_in_laps.head(5).iterrows():
                     print(f"  Гонщик: {lap['Driver']}, Круг: {lap['LapNumber']}, PitInTime: {lap['PitInTime']}")
         
-        # Основной способ: находим пит-стопы по смене стендов (Stint)
+        # Находим пит-стопы по смене стендов (Stint)
         print("\nПоиск пит-стопов по смене стендов (Stint)...")
         
         if 'Stint' in laps.columns:
@@ -234,7 +234,6 @@ def get_pitstop_data(session):
                         # Нашли смену стенда на этом круге
                         pitstop_lap = lap_num
                         
-                        # Ищем реальное время пит-стопа
                         pitstop_time_seconds = 2.5  # значение по умолчанию
                         
                         # Пробуем найти реальное время

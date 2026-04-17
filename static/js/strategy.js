@@ -53,7 +53,6 @@ function renderTyreStrategyChart(strategyData) {
         maxLaps = Math.max(maxLaps, driverLaps);
     });
     
-    // Пока просто сортируем по имени
     strategyData.sort((a, b) => a.driver.localeCompare(b.driver));
     
     let html = '<div class="tyre-strategy-container">';
@@ -128,8 +127,6 @@ function displayStrategyError(message) {
     `;
 }
 
-
-// Экспортируем функции
 if (typeof window !== 'undefined') {
     window.loadTyreStrategy = loadTyreStrategy;
     window.renderTyreStrategyChart = renderTyreStrategyChart;
@@ -180,7 +177,6 @@ function renderPitstopAnalysisChart(data) {
         return;
     }
     
-    // Создаем график для команд
     let html = `
         <div class="pitstop-analysis-container">
             <div class="pitstop-summary">

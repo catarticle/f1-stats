@@ -82,7 +82,6 @@ function displayTrackStats(statsData) {
     }
 }
 
-
 function displayFallbackStats(eventName) {
     const statsContainer = document.getElementById('track-stats');
     if (!statsContainer) return;
@@ -161,8 +160,6 @@ function drawFallbackTrack() {
     svg.appendChild(startLine);
 }
 
-
-// Экспортируем функцию
 if (typeof window !== 'undefined') {
     window.loadTrackStats = loadTrackStats;
     window.displayTrackStats = displayTrackStats;

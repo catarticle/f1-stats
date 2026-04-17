@@ -31,16 +31,18 @@ def get_team_color(team):
         'Mercedes': '#27F4D2',
         'Red Bull': '#3671C6', 
         'Red Bull Racing': '#3671C6',
-        'Ferrari': '#E80020',
+        'Ferrari': '#e8002d',
         'McLaren': '#FF8000',
         'Alpine': '#FF87BC',
         'Williams': '#64C4FF',
         'Aston Martin': '#229971',
         'AlphaTauri': '#6692FF', 
         'Racing Bulls': '#6692FF',
-        'Haas': '#B6BABD',
+        'Haas': '#dee1e2',
         'Alfa Romeo': '#52E252',
-        'Kick Sauber': '#52E252'
+        'Kick Sauber': '#52E252',
+        'Audi': '#ff2d00',
+        'Cadillac': '#aaaaad'
     }
     return colors.get(team, '#CCCCCC')
 
@@ -139,7 +141,6 @@ def check_laps_behind(session, driver_number):
         return 0
 
 def format_laps_behind(laps):
-    """Форматирует отставание в кругах на русском языке"""
     if laps <= 0:
         return ""
     
